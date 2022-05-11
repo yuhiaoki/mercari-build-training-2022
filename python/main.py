@@ -1,4 +1,5 @@
 import os
+import json
 import logging
 import pathlib
 from fastapi import FastAPI, Form, HTTPException
@@ -24,6 +25,8 @@ def root():
 
 @app.post("/items")
 def add_item(name: str = Form(...)):
+    with open(r'item.json', 'r') as f:
+        json_data = json.load(f)
     logger.info(f"Receive item: {name}")
     return {"message": f"item received: {name}"}
 
