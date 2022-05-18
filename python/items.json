@@ -3,6 +3,18 @@
     {
       "name": "jacket",
       "category": "fashion"
+    },
+    {
+      "name": "fish",
+      "category": "food"
+    },
+    {
+      "name": "dictionary",
+      "category": "book"
+    },
+    {
+      "name": "fish",
+      "category": "food"
     }
   ]
 }

@@ -1,49 +1,74 @@
 import os
 import logging
 import pathlib
-from fastapi import FastAPI, Form, HTTPException
+from fastapi import FastAPI, Form, HTTPException, Depends
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
+
+
 # from typing import List,Dict
 import json
 from collections import OrderedDict
+
+import models
+from database import engine, SessionLocal
+from sqlalchemy.orm import Session
 
 app = FastAPI()
 logger = logging.getLogger("uvicorn")
 logger.level = logging.INFO
 images = pathlib.Path(__file__).parent.resolve() / "image"
-origins = [ os.environ.get('FRONT_URL', 'http://localhost:3000') ]
+origins = [os.environ.get("FRONT_URL", "http://localhost:3000")]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=False,
-    allow_methods=["GET","POST","PUT","DELETE"],
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_headers=["*"],
 )
+models.Base.metadata.create_all(bind=engine)
+
+
+def get_db():
+    try:
+        db = SessionLocal()
+        yield db
+    finally:
+        db.close()
+
 
 @app.get("/")
 def root():
     return {"message": "Hello, world!"}
 
+
 @app.post("/items")
-def add_item(name: str = Form(...),category: str = Form(...)):
-    with open('items.json') as f:
-        d= json.load(f, object_pairs_hook=OrderedDict)
-        print(d)
-        keys=['name','category']
-        values=[name,category]
-        item=dict(zip(keys,values))
-        d['items'].append(item)
-        print(d)
-    with open('items.json', 'w') as f:
+def add_item(name: str = Form(...), category: str = Form(...)):
+    with open("items.json") as f:
+        d = json.load(f, object_pairs_hook=OrderedDict)
+        keys = ["name", "category"]
+        values = [name, category]
+        item = dict(zip(keys, values))
+        d["items"].append(item)
+    with open("items.json", "w") as f:
         json.dump(d, f, indent=2, ensure_ascii=False)
     return {"message": f"item received: {name}"}
 
+
 @app.get("/items")
 def get_items():
-    with open('items.json') as f:
-        d= json.load(f)
+    with open("items.json") as f:
+        d = json.load(f)
     return d
+
+
+@app.get("/search")
+def serch_items(keyword: str, db: Session = Depends(get_db)):
+    item_model = db.query(models.Items).filter(models.Items.name == keyword).all()
+    if item_model is not None:
+        return item_model
+    raise HTTPException(status_code=404, detail="item not found")
+
 
 @app.get("/image/{items_image}")
 async def get_image(items_image):

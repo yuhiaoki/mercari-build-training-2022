@@ -1,0 +1,6 @@
+{
+  "python.analysis.extraPaths": ["./db"],
+  "python.formatting.provider": "black",
+  "python.formatting.blackArgs": ["--line-length", "88"],
+  "editor.formatOnSave": true
+}
