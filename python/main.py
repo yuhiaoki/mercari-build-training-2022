@@ -58,23 +58,27 @@ def add_item(
     item_model.name = name
     item_model.category = category
 
-    db.add(items_model, item_model)
+    db.add(item_model, item_model)
     db.commit()
     return {"message": f"item received: {name}"}
 
+    # with open("items.json") as f:
+    #     d = json.load(f)
+    # return d
+
 
 @app.get("/items")
-def get_items():
-    with open("items.json") as f:
-        d = json.load(f)
-    return d
+def get_items(db: Session = Depends(get_db)):
+    if db.query(models.Items).all() is not None:
+        return {"items": db.query(models.Items).all()}
+    raise HTTPException(status_code=404, detail="item not found")
 
 
 @app.get("/search")
 def serch_items(keyword: str, db: Session = Depends(get_db)):
     item_model = db.query(models.Items).filter(models.Items.name == keyword).all()
     if item_model is not None:
-        return item_model
+        return {"items": item_model}
     raise HTTPException(status_code=404, detail="item not found")
 
 
