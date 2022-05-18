@@ -43,15 +43,23 @@ def root():
 
 
 @app.post("/items")
-def add_item(name: str = Form(...), category: str = Form(...)):
-    with open("items.json") as f:
-        d = json.load(f, object_pairs_hook=OrderedDict)
-        keys = ["name", "category"]
-        values = [name, category]
-        item = dict(zip(keys, values))
-        d["items"].append(item)
-    with open("items.json", "w") as f:
-        json.dump(d, f, indent=2, ensure_ascii=False)
+def add_item(
+    name: str = Form(...), category: str = Form(...), db: Session = Depends(get_db)
+):
+    # with open("items.json") as f:
+    #     d = json.load(f, object_pairs_hook=OrderedDict)
+    #     keys = ["name", "category"]
+    #     values = [name, category]
+    #     item = dict(zip(keys, values))
+    #     d["items"].append(item)
+    # with open("items.json", "w") as f:
+    #     json.dump(d, f, indent=2, ensure_ascii=False)
+    item_model = models.Items()
+    item_model.name = name
+    item_model.category = category
+
+    db.add(items_model, item_model)
+    db.commit()
     return {"message": f"item received: {name}"}
 
 
