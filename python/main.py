@@ -5,7 +5,8 @@ from fastapi import FastAPI, Form, HTTPException, Depends, File, UploadFile
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-# from PIL import Image
+from PIL import Image
+
 # from io import BytesIO
 
 
@@ -17,6 +18,7 @@ import models
 from database import engine, SessionLocal
 from sqlalchemy.orm import Session
 import hashlib
+import shutil
 
 app = FastAPI()
 logger = logging.getLogger("uvicorn")
@@ -47,7 +49,7 @@ def root():
 
 
 @app.post("/items")
-def add_item(
+async def add_item(
     name: str = Form(...),
     category: str = Form(...),
     image: UploadFile = File(...),
@@ -61,22 +63,18 @@ def add_item(
     #     d["items"].append(item)
     # with open("items.json", "w") as f:
     #     json.dump(d, f, indent=2, ensure_ascii=False)
-    imagename = image.filename
-    if not imagename.endswith(".jpg"):
+    if not image.filename.endswith(".jpg"):
         raise HTTPException(status_code=400, detail="Image path does not end with .jpg")
-    if not image.exists():
-        logger.debug(f"Image not found: {image}")
-        image = images / "default.jpg"
 
     item_model = models.Items()
     item_model.name = name
     item_model.category = category
-    with open(imagename, "rb") as f:
-        sha256 = hashlib.sha256(f.read()).hexdigest() + "jpg"
-    with open(imagename, "wb") as f:
-        f.write(sha256)
-    item_model.image = sha256
-    db.add(item_model, item_model)
+    sha256 = hashlib.sha256(image.file.read()).hexdigest() + ".jpg"
+    item_model.image_filename = sha256
+    path = images / sha256
+    with open(path, "wb") as f:
+        shutil.copyfileobj(image.file, f)
+    db.add(item_model)
     db.commit()
     return {"message": f"item received: {name}"}
 
