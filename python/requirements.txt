@@ -1,2 +1,5 @@
-fastapi[all]>=0.75
-uvicorn[standard]>=0.15
+fastapi
+uvicorn
+SQLAlchemy
+SQLAlchemy-Utils
+python-multipart

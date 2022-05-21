@@ -1,0 +1,12 @@
+version: "3.0"
+
+services:
+  # FastAPI
+  api:
+    image: build2022/app:latest
+    container_name: "api"
+    build: .
+    restart: always
+    tty: true
+    ports:
+      - 9000:9000

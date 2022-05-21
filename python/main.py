@@ -5,15 +5,10 @@ from fastapi import FastAPI, Form, HTTPException, Depends, File, UploadFile
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-from PIL import Image
-
 # from io import BytesIO
-
-
 # from typing import List,Dict
-import json
+# import json
 from collections import OrderedDict
-
 import models
 from database import engine, SessionLocal
 from sqlalchemy.orm import Session
@@ -44,7 +39,35 @@ def get_db():
 
 
 @app.get("/")
-def root():
+def root(db: Session = Depends(get_db)):
+    db.add(models.Category(name="food"))
+    db.add(models.Category(name="book"))
+    db.add(models.Category(name="fashon"))
+    db.flush()
+    db.add(
+        models.Items(
+            name="fish", category_id=1, image_filename="python\image\default.jpg"
+        )
+    )
+    db.add(
+        models.Items(
+            name="dictionary",
+            category_id=2,
+            image_filename="python\image\default.jpg",
+        )
+    )
+    db.add(
+        models.Items(
+            name="T-shirt", category_id=3, image_filename="python\image\default.jpg"
+        )
+    )
+    db.add(
+        models.Items(
+            name="jaket", category_id=3, image_filename="python\image\default.jpg"
+        )
+    )
+    db.flush()
+    db.commit()
     return {"message": "Hello, world!"}
 
 
@@ -65,10 +88,13 @@ async def add_item(
     #     json.dump(d, f, indent=2, ensure_ascii=False)
     if not image.filename.endswith(".jpg"):
         raise HTTPException(status_code=400, detail="Image path does not end with .jpg")
-
+    category_model = models.Category()
+    category_model.name = category
+    db.add(category_model)
+    db.flush()
     item_model = models.Items()
     item_model.name = name
-    item_model.category = category
+    item_model.category_id = category_model.id
     sha256 = hashlib.sha256(image.file.read()).hexdigest() + ".jpg"
     item_model.image_filename = sha256
     path = images / sha256
@@ -85,8 +111,26 @@ async def add_item(
 
 @app.get("/items")
 def get_items(db: Session = Depends(get_db)):
-    if db.query(models.Items).all() is not None:
-        return {"items": db.query(models.Items).all()}
+    item_model = (
+        db.query(
+            models.Items.id,
+            models.Items.name,
+            models.Items.image_filename,
+            models.Category.name.label("category"),
+        )
+        .outerjoin(models.Category, models.Category.id == models.Items.category_id)
+        .all()
+    )
+    if item_model is not None:
+        return {"items": item_model}
+    raise HTTPException(status_code=404, detail="item not found")
+
+
+@app.get("/items/{id}")
+def get_item(id: str, db: Session = Depends(get_db)):
+    item_model = db.query(models.Items).filter(models.Items.id == id).all()
+    if item_model is not None:
+        return {"items": item_model}
     raise HTTPException(status_code=404, detail="item not found")
 
 
