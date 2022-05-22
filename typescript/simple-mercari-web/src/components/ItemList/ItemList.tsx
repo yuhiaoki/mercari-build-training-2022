@@ -1,56 +1,67 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 
 interface Item {
   id: number;
   name: string;
   category: string;
-  image: string;
-};
+  image_filename: string;
+}
 
-const server = process.env.API_URL || 'http://127.0.0.1:9000';
-const placeholderImage = process.env.PUBLIC_URL + '/logo192.png';
+const server = process.env.API_URL || "http://127.0.0.1:9000";
 
-export const ItemList: React.FC<{}> = () => {
-  const [items, setItems] = useState<Item[]>([])
+interface Prop {
+  reload?: boolean;
+  onLoadCompleted?: () => void;
+  add?: boolean;
+  handleAdd?: (e: boolean) => void;
+}
+
+export const ItemList = ({
+  reload = true,
+  onLoadCompleted,
+  add,
+  handleAdd,
+}: Prop) => {
+  const [items, setItems] = useState<Item[]>([]);
   const fetchItems = () => {
-    fetch(server.concat('/items'),
-    {
-      method: 'GET',
-      mode: 'cors',
-      headers : {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
+    fetch(server.concat("/items"), {
+      method: "GET",
+      mode: "cors",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
       },
     })
-      .then(response => response.json())
-      .then(data => {
-        console.log('GET success:',data);
-        setItems(data.items);
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("GET success:", data);
+        setItems(data);
       })
-      .catch(error => {
-        console.error('GET error:',error)
-      })
-  }
+      .catch((error) => {
+        console.error("GET error:", error);
+      });
+  };
 
   useEffect(() => {
     fetchItems();
-  }, []);
-  
+    handleAdd?.(false);
+  }, [add]);
   return (
-    <div>
-      { items.map((item) => {
+    <div className="list-container">
+      {items.map((item) => {
+        const placeholderImage =
+          "http://127.0.0.1:9000/image/" + item?.id + ".jpg";
         return (
-          <div key={item.id} className='ItemList'>
+          <li key={item.id} className="ItemList">
             {/* TODO: Task 1: Replace the placeholder image with the item image */}
-            <img src={placeholderImage}/>
-            <p>
-            <span>Name: {item.name}</span>
-            <br/>
-            <span>Category: {item.category}</span>
-            </p>
-          </div>
-        )
+            <div className="img">
+              <img src={placeholderImage} />
+            </div>
+            <p>商品名: {item.name}</p>
+            <p>カテゴリー: {item.category}</p>
+          </li>
+        );
       })}
     </div>
-  )
+  );
 };
