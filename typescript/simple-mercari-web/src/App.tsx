@@ -1,24 +1,33 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import './App.css';
-import { ItemList } from './components/ItemList';
-import { Listing } from './components/Listing';
+import React, { useEffect, useMemo, useState } from "react";
+import "./App.scss";
+import { ItemList } from "./components/ItemList";
+import { Listing } from "./components/Listing";
 
-function App() { 
+function App() {
+  const [open, setOpen] = useState<boolean>(false);
+  const [add, setAdd] = useState<boolean>(false);
+  const handleAdd = (e: boolean) => setAdd(e);
+  const updateOpen = () => setOpen(!open);
   return (
     <div>
-      <header className='Title'>
-        <p>
-          <b>Simple Mercari</b>
+      <header>
+        <p className="Title">
+          <b>Mercari build shop</b>
         </p>
+        <div className="btn-box">
+          <button onClick={() => setOpen(!open)} className="btn">
+            <b>Add Item</b>
+          </button>
+        </div>
       </header>
       <div>
-        <Listing/>
+        <Listing open={open} updateOpen={updateOpen} handleAdd={handleAdd} />
       </div>
       <div>
-        <ItemList/>
+        <ItemList add={add} handleAdd={handleAdd} />
       </div>
     </div>
-  )
+  );
 }
 
 export default App;

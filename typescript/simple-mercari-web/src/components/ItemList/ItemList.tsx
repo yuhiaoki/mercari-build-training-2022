@@ -12,13 +12,17 @@ const server = process.env.API_URL || "http://127.0.0.1:9000";
 interface Prop {
   reload?: boolean;
   onLoadCompleted?: () => void;
+  add?: boolean;
+  handleAdd?: (e: boolean) => void;
 }
 
-export const ItemList: React.FC<Prop> = (props) => {
-  const { reload = true, onLoadCompleted } = props;
+export const ItemList = ({
+  reload = true,
+  onLoadCompleted,
+  add,
+  handleAdd,
+}: Prop) => {
   const [items, setItems] = useState<Item[]>([]);
-  console.log(items);
-
   const fetchItems = () => {
     fetch(server.concat("/items"), {
       method: "GET",
@@ -40,23 +44,22 @@ export const ItemList: React.FC<Prop> = (props) => {
 
   useEffect(() => {
     fetchItems();
-  }, []);
-
+    handleAdd?.(false);
+  }, [add]);
   return (
-    <div>
+    <div className="list-container">
       {items.map((item) => {
         const placeholderImage =
           "http://127.0.0.1:9000/image/" + item?.id + ".jpg";
         return (
-          <div key={item.id} className="ItemList">
+          <li key={item.id} className="ItemList">
             {/* TODO: Task 1: Replace the placeholder image with the item image */}
-            <img src={placeholderImage} />
-            <p>
-              <span>Name: {item.name}</span>
-              <br />
-              <span>Category: {item.category}</span>
-            </p>
-          </div>
+            <div className="img">
+              <img src={placeholderImage} />
+            </div>
+            <p>商品名: {item.name}</p>
+            <p>カテゴリー: {item.category}</p>
+          </li>
         );
       })}
     </div>
